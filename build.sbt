@@ -5,5 +5,6 @@ ThisBuild / scalaVersion := "2.13.10"
 lazy val root = (project in file("."))
   .settings(
     name := "Elbing",
-    idePackagePrefix := Some("com.inossem")
+    idePackagePrefix := Some("com.inossem"),
+    libraryDependencies ++= Dependencies.dependency
   )
