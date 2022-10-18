@@ -38,8 +38,12 @@ object Dependencies {
     "io.circe" %% "circe-generic" % "0.14.1"
   )
 
+  lazy val leveldb = Seq(
+    "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
+  )
+
 
   lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization
 
-  lazy val dependency = akka ++ log ++ circe
+  lazy val dependency = akka ++ log ++ circe ++ leveldb
 }

@@ -5,6 +5,7 @@ import elbing.actors.http.ServerActor
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
+import com.inossem.elbing.actors.persistence.ContextManageActor
 
 object RootActor {
   sealed trait Command
@@ -13,7 +14,8 @@ object RootActor {
 }
 
 class RootActor(context: ActorContext[RootActor.Command]) extends AbstractBehavior[RootActor.Command](context) {
-  private val server = context.spawn(ServerActor(), "http-server")
+  private val persistenceManager = context.spawn(ContextManageActor(), "persistence-manager")
+  private val server = context.spawn(ServerActor(persistenceManager), "http-server")
 
   override def onMessage(msg: RootActor.Command): Behavior[RootActor.Command] = Behaviors.ignore
 }

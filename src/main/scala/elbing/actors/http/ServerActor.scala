@@ -2,7 +2,7 @@ package com.inossem
 package elbing.actors.http
 
 import elbing.actors.http.ServerActor._
-import elbing.actors.persistence.ContextActor
+import elbing.actors.persistence.{ContextActor, ContextManageActor}
 import elbing.domain.UpdateContext
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
@@ -12,7 +12,10 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import com.typesafe.config.ConfigFactory
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
+import akka.actor.typed.scaladsl.AskPattern._
+import akka.util.Timeout
 
+import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
 
 object ServerActor {
@@ -22,15 +25,15 @@ object ServerActor {
 
   private final case class ServerFailed(ex: Throwable) extends Command
 
-  def apply(): Behavior[Command] = Behaviors.setup(new ServerActor(_))
+  def apply(manager: ActorRef[ContextManageActor.Command]): Behavior[Command] = Behaviors.setup(new ServerActor(_, manager))
 }
 
-class ServerActor(context: ActorContext[Command]) extends AbstractBehavior(context) {
+class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManageActor.Command]) extends AbstractBehavior(context) {
   implicit private val sys = context.system
   private val config = ConfigFactory.load().getConfig("app")
   private val port = config.getInt("port")
   private val logger = context.log
-  private var map = Map.empty[String, ActorRef[ContextActor.Update]]
+  private implicit val timeout: Timeout = 3.seconds
 
   private val homeRouter = path("home") {
     get {
@@ -43,15 +46,8 @@ class ServerActor(context: ActorContext[Command]) extends AbstractBehavior(conte
       put {
         entity(as[UpdateContext]) { updateContext =>
           logger.info("updateContext:{}", updateContext)
-          val id = updateContext.id
-          val actor =
-            if (map.contains(id)) {
-              map(id)
-            } else {
-              context.spawn(ContextActor(id), id)
-            }
-          actor ! ContextActor.Update(updateContext.topicName, updateContext.context)
-          complete(StatusCodes.NoContent)
+          val f = manager ?[ContextManageActor.Updated] (actor => ContextManageActor.Update(updateContext.id, updateContext.topicName, updateContext.context, actor))
+          complete(f)
         }
       }
     }

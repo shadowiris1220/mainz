@@ -4,6 +4,10 @@ ThisBuild / scalaVersion := "2.13.10"
 
 Compile / scalacOptions += "-P:serializability-checker-plugin:--disable-detection-generics"
 
+Compile / scalacOptions += "-P:serializability-checker-plugin:--disable-detection-generic-methods"
+
+Compile / scalacOptions += "-P:serializability-checker-plugin:--disable-detection-methods"
+
 lazy val root = (project in file("."))
   .enablePlugins(AkkaSerializationHelperPlugin)
   .settings(
