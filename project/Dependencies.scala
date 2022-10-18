@@ -1,4 +1,5 @@
 import sbt._
+import org.virtuslab.ash.AkkaSerializationHelperPlugin
 
 object Dependencies {
 
@@ -15,11 +16,17 @@ object Dependencies {
     "com.typesafe.akka" %% "akka-persistence-testkit" % AkkaVersion % Test
   )
   lazy val akkaHttp = Seq(
-    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion
+    "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
+    "de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
   )
 
   lazy val akkaStream = Seq(
     "com.typesafe.akka" %% "akka-stream-typed" % AkkaVersion
+  )
+
+  lazy val akkaSerialization = Seq(
+    AkkaSerializationHelperPlugin.annotation,
+    AkkaSerializationHelperPlugin.circeAkkaSerializer
   )
 
   lazy val log = Seq(
@@ -27,7 +34,12 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic" % "1.4.4"
   )
 
-  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream
+  lazy val circe = Seq(
+    "io.circe" %% "circe-generic" % "0.14.1"
+  )
 
-  lazy val dependency = akka ++ log
+
+  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization
+
+  lazy val dependency = akka ++ log ++ circe
 }
