@@ -5,6 +5,7 @@ object Dependencies {
 
   lazy val AkkaVersion = "2.6.14"
   lazy val AkkaHttpVersion = "10.2.10"
+  lazy val SlickVersion = "3.3.3"
 
   lazy val akkaActor = Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
@@ -29,6 +30,13 @@ object Dependencies {
     AkkaSerializationHelperPlugin.circeAkkaSerializer
   )
 
+  lazy val akkaPersistenceJDBC = Seq(
+    "com.lightbend.akka" %% "akka-persistence-jdbc" % "5.0.1",
+    "com.typesafe.akka" %% "akka-persistence-query" % AkkaVersion,
+    "com.typesafe.slick" %% "slick" % SlickVersion,
+    "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion
+  )
+
   lazy val log = Seq(
     "ch.qos.logback" % "logback-core" % "1.4.4",
     "ch.qos.logback" % "logback-classic" % "1.4.4"
@@ -42,8 +50,12 @@ object Dependencies {
     "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8"
   )
 
+  lazy val postgres = Seq(
+     "org.postgresql" % "postgresql" % "42.5.0"
+  )
 
-  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization
 
-  lazy val dependency = akka ++ log ++ circe ++ leveldb
+  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization ++ akkaPersistenceJDBC
+
+  lazy val dependency = akka ++ log ++ circe ++ leveldb ++ postgres
 }
