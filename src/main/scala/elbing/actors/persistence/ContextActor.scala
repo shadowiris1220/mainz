@@ -23,7 +23,7 @@ object ContextActor {
 
   final case class UpdateResponse(version: Int)
 
-  final case class CurrentState(state: State)
+  final case class CurrentState(state: Map[String, Json])
 
   final case class Update(topicName: String, value: Json, replyTo: ActorRef[UpdateResponse]) extends Command
 
@@ -41,7 +41,7 @@ object ContextActor {
         ctx.log.info("the value is:{}", value.noSpaces)
         UpdateResponse(s.version)
       })
-      case QueryState(replyTo) => replyTo ! CurrentState(state)
+      case QueryState(replyTo) => replyTo ! CurrentState(state.currentContext)
         Effect.none
     }
   }

@@ -4,7 +4,6 @@ package elbing
 import elbing.actors.RootActor
 
 import akka.actor.typed.ActorSystem
-import akka.persistence.jdbc.testkit.scaladsl.SchemaUtils
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 

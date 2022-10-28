@@ -2,18 +2,18 @@ package com.inossem
 package elbing.actors.http
 
 import elbing.actors.http.ServerActor._
-import elbing.actors.persistence.{ContextActor, ContextManageActor}
+import elbing.actors.persistence.ContextManageActor
 import elbing.domain.UpdateContext
 
+import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import de.heikoseeberger.akkahttpcirce.FailFastCirceSupport._
-import akka.actor.typed.scaladsl.AskPattern._
-import akka.util.Timeout
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Success}
@@ -30,6 +30,7 @@ object ServerActor {
 
 class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManageActor.Command]) extends AbstractBehavior(context) {
   implicit private val sys = context.system
+  implicit private val ec = sys.executionContext
   private val config = ConfigFactory.load().getConfig("app")
   private val port = config.getInt("port")
   private val logger = context.log
@@ -53,7 +54,7 @@ class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManag
       get {
         parameter("id".as[String]) { id =>
           val f = manager ?[ContextManageActor.CurrentState] (actor => ContextManageActor.QueryState(id, actor))
-          complete(f)
+          complete(f.map(_.state))
         }
       }
     }

@@ -5,14 +5,13 @@ import elbing.actors.persistence.ContextManageActor._
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.pattern._
 import akka.util.Timeout
 import io.circe.generic.semiauto.deriveCodec
 import io.circe.{Codec, Json}
 
 import scala.concurrent.duration.DurationInt
-import scala.util.{Failure, Success}
 import scala.util.chaining._
+import scala.util.{Failure, Success}
 
 object ContextManageActor {
   sealed trait Command
@@ -25,7 +24,7 @@ object ContextManageActor {
 
   final case class Updated(currentVersion: Int)
 
-  final case class CurrentState(state: Option[ContextActor.State])
+  final case class CurrentState(state: Option[Map[String,Json]])
 
   implicit val codec: Codec[Updated] = deriveCodec
 
