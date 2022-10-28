@@ -8,10 +8,14 @@ Compile / scalacOptions += "-P:serializability-checker-plugin:--disable-detectio
 
 Compile / scalacOptions += "-P:serializability-checker-plugin:--disable-detection-methods"
 
+enablePlugins(JavaAppPackaging)
 lazy val root = (project in file("."))
   .enablePlugins(AkkaSerializationHelperPlugin)
   .settings(
     name := "Elbing",
     idePackagePrefix := Some("com.inossem"),
-    libraryDependencies ++= Dependencies.dependency
+    libraryDependencies ++= Dependencies.dependency,
+    scriptClasspath := Seq("*"),
+    Compile / mainClass := Some("com.inossem.elbing.Application"),
+    packageDoc / publishArtifact := false
   )
