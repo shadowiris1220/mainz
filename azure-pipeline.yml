@@ -1,0 +1,110 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  - develop
+
+pool:
+  vmImage: ubuntu-latest
+  name: PGO
+
+parameters:
+  - name: tag
+    displayName: Image Tag
+    type: string
+    default: snapshot
+
+variables:
+  - name: purge_cmd
+    value: acr purge --filter 'elbing-dc:${{ parameters.tag }}' --ago 30d --untagged
+  - name: tag
+    value: 'snapshot-$(Build.BuildId)'
+  - name: purge_snapshot
+    value: acr purge --filter 'elbing-dc:snapshot-*' --ago 10m
+
+stages:
+  - stage: build_and_publish
+    jobs:
+      - job: prepare_env
+        steps:
+          - script: |
+              curl -s "https://get.sdkman.io" | bash
+              source "$HOME/.sdkman/bin/sdkman-init.sh"
+              sdk install java 21.3.0.r11-grl
+              sdk install sbt
+      - job: package
+        dependsOn: prepare_env
+        steps:
+          - script: |
+              sbt clean
+              sbt update
+              sbt compile
+              sbt stage
+            env:
+              REPO_USER: $(REPO_USER)
+              REPO_PASS: $(REPO_PASS)
+          - publish: $(System.DefaultWorkingDirectory)/target/universal
+            artifact: nurnberg
+            displayName: 'Publish dist'
+          - task: Docker@2
+            displayName: 'Build and publish image'
+            inputs:
+              containerRegistry: 'inossem'
+              repository: 'elbing-dc'
+              command: 'buildAndPush'
+              Dockerfile: '$(System.DefaultWorkingDirectory)/Dockerfile'
+              tags: |
+                $(tag)
+                ${{ parameters.tag }}
+  - stage: clean
+    jobs:
+      - job: clean_image
+        steps:
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: 'Pgo'
+              scriptType: 'bash'
+              scriptLocation: 'inlineScript'
+              inlineScript: |
+                az --version
+                az account show
+                az acr run --cmd "$(purge_cmd)" --registry inossem  /dev/null
+                az acr run --cmd "$(purge_snapshot)" --registry inossem /dev/null
+  - stage: deploy
+    jobs:
+      - deployment: VMDeploy
+        displayName: deploy
+        environment:
+          name: internal-server
+          resourceType: VirtualMachine
+          resourceName: internal
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - script: |
+                    az acr login --name inossem
+                    docker-compose down
+                    docker-compose pull
+                    docker image prune -f
+                    docker-compose up -d
+                  workingDirectory: "/home/pgo-build"
+      - deployment: k8sDeploy
+        displayName: k8s
+        environment:
+          name: k8s-deploy
+          resourceType: Kubernetes
+          resourceName: default
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: KubernetesManifest@0
+                  inputs:
+                    action: 'deploy'
+                    kubernetesServiceConnection: 'k8s-deploy-pgo-default-1656724398006'
+                    namespace: 'default'
+                    manifests: 'kubernetes/deployment.yaml'
+                    containers: 'inossem.azurecr.io/elbing-dc:$(tag)'

@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: elbing
+  labels:
+    app: elbing
+spec:
+  selector:
+    matchLabels:
+      app: elbing-pod
+  template:
+    metadata:
+      labels:
+        app: elbing-pod
+    spec:
+      imagePullSecrets:
+        - name: azure-cr
+      nodeSelector:
+        kubernetes.azure.com/mode: user
+      containers:
+        - name: k8s-elbing
+          image: inossem.azurecr.io/elbing-dc
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DB_HOST
+              value: postgres-svc
+            - name: DB_USER
+              value: postgres
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: DB_PASSWORD
