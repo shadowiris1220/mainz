@@ -18,10 +18,16 @@ object ContextActor {
   implicit lazy val codecCommand: Codec[Command] = deriveCodec
   implicit lazy val codecEvent: Codec[Event] = deriveCodec
   implicit lazy val codecActor: Codec[ActorRef[UpdateResponse]] = new AkkaCodecs {}.actorRefCodec
+  implicit lazy val currentActor: Codec[ActorRef[CurrentState]] = new AkkaCodecs {}.actorRefCodec
+  implicit lazy val stateCodec: Codec[State] = deriveCodec
 
   final case class UpdateResponse(version: Int)
 
+  final case class CurrentState(state: State)
+
   final case class Update(topicName: String, value: Json, replyTo: ActorRef[UpdateResponse]) extends Command
+
+  final case class QueryState(replyTo: ActorRef[CurrentState]) extends Command
 
   sealed trait Event extends CirceAkkaSerializable
 
@@ -35,6 +41,8 @@ object ContextActor {
         ctx.log.info("the value is:{}", value.noSpaces)
         UpdateResponse(s.version)
       })
+      case QueryState(replyTo) => replyTo ! CurrentState(state)
+        Effect.none
     }
   }
 

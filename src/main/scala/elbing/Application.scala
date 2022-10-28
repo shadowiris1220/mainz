@@ -13,5 +13,4 @@ object Application extends App {
   val config = ConfigFactory.load().getConfig("app")
   val appName = config.getString("name")
   implicit val actorSystem = ActorSystem(RootActor(), appName)
-  SchemaUtils.createIfNotExists()
 }

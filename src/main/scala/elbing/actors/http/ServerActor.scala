@@ -33,7 +33,7 @@ class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManag
   private val config = ConfigFactory.load().getConfig("app")
   private val port = config.getInt("port")
   private val logger = context.log
-  private implicit val timeout: Timeout = 3.seconds
+  private implicit val timeout: Timeout = 10.seconds
 
   private val homeRouter = path("home") {
     get {
@@ -47,6 +47,12 @@ class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManag
         entity(as[UpdateContext]) { updateContext =>
           logger.info("updateContext:{}", updateContext)
           val f = manager ?[ContextManageActor.Updated] (actor => ContextManageActor.Update(updateContext.id, updateContext.topicName, updateContext.context, actor))
+          complete(f)
+        }
+      }
+      get {
+        parameter("id".as[String]) { id =>
+          val f = manager ?[ContextManageActor.CurrentState] (actor => ContextManageActor.QueryState(id, actor))
           complete(f)
         }
       }
