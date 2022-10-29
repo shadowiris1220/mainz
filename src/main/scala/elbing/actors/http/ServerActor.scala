@@ -50,8 +50,7 @@ class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManag
           val f = manager ?[ContextManageActor.Updated] (actor => ContextManageActor.Update(updateContext.id, updateContext.topicName, updateContext.context, actor))
           complete(f)
         }
-      }
-      get {
+      } ~ get {
         parameter("id".as[String]) { id =>
           val f = manager ?[ContextManageActor.CurrentState] (actor => ContextManageActor.QueryState(id, actor))
           complete(f.map(_.state))
