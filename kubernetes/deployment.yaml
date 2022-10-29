@@ -65,7 +65,8 @@ spec:
         paths:
           - path: /
             backend:
-              name: elbing-svc
-              port:
-                number: 8000
+              service:
+                name: elbing-svc
+                port:
+                  number: 8000
             pathType: Exact
