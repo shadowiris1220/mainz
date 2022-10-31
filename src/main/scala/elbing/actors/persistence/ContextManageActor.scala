@@ -4,7 +4,7 @@ package elbing.actors.persistence
 import elbing.actors.persistence.ContextManageActor._
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
-import akka.actor.typed.{ActorRef, Behavior}
+import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
 import akka.util.Timeout
 import io.circe.generic.semiauto.deriveCodec
 import io.circe.{Codec, Json}
@@ -31,7 +31,7 @@ object ContextManageActor {
   implicit val stateCodec: Codec[CurrentState] = deriveCodec
 
 
-  def apply(): Behavior[Command] = Behaviors.setup(new ContextManageActor(_))
+  def apply(): Behavior[Command] = Behaviors.supervise(Behaviors.setup(new ContextManageActor(_))).onFailure(SupervisorStrategy.restart)
 }
 
 class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavior[Command](context) {
