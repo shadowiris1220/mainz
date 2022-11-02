@@ -58,11 +58,21 @@ kind: Service
 metadata:
   name: elbing-svc
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - port: 8000
       targetPort: 8000
       name: elbing-port
+  selector:
+    app: elbing-pod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elbing-akka-svc
+spec:
+  type: ClusterIP
+  ports:
     - port: 8558
       targetPort: 8558
       name: akka-port
