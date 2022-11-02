@@ -20,13 +20,12 @@ class RootActor(context: ActorContext[RootActor.Command]) extends AbstractBehavi
   private val persistenceManager = context.spawn(ContextManageActor(), "persistence-manager")
   private val server = context.spawn(ServerActor(persistenceManager), "http-server")
   private val config = ConfigFactory.load()
-  private val provider = config.getString("akka.actor.provider")
-  if (provider == "cluster") {
+  private val local = config.getBoolean("app.local")
+  if (!local) {
     val system = context.system
     AkkaManagement(system).start()
     ClusterBootstrap(system).start()
   } else {
-    context.log.info("provider is:{}", provider)
     context.log.info("actor will run in single node")
   }
 

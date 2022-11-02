@@ -5,6 +5,7 @@ import elbing.actors.CirceAkkaSerializable
 
 import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.EventSourcedBehavior.{CommandHandler, EventHandler}
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
@@ -57,11 +58,15 @@ object ContextActor {
     }
   }
 
-  def apply(id: String) = Behaviors.setup[Command](ctx =>
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("ContextActor")
+
+  def apply(entityId: String, persistenceId: PersistenceId) = Behaviors.setup[Command](ctx => {
+    ctx.log.info("Starting ContextActor:{}", entityId)
     EventSourcedBehavior(
-      persistenceId = PersistenceId.ofUniqueId(id),
+      persistenceId = persistenceId,
       emptyState = State(Map.empty, List.empty, 0),
       commandHandler = commandHandler(ctx),
       eventHandler = eventHandler(ctx)
-    ))
+    )
+  })
 }

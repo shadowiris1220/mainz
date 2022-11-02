@@ -5,6 +5,8 @@ import elbing.actors.persistence.ContextManageActor._
 
 import akka.actor.typed.scaladsl.{AbstractBehavior, ActorContext, Behaviors}
 import akka.actor.typed.{ActorRef, Behavior, SupervisorStrategy}
+import akka.cluster.sharding.typed.scaladsl.{ClusterSharding, Entity}
+import akka.persistence.typed.PersistenceId
 import akka.util.Timeout
 import io.circe.generic.semiauto.deriveCodec
 import io.circe.{Codec, Json}
@@ -24,7 +26,7 @@ object ContextManageActor {
 
   final case class Updated(currentVersion: Int)
 
-  final case class CurrentState(state: Option[Map[String,Json]])
+  final case class CurrentState(state: Option[Map[String, Json]])
 
   implicit val codec: Codec[Updated] = deriveCodec
 
@@ -35,12 +37,15 @@ object ContextManageActor {
 }
 
 class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavior[Command](context) {
-  var map: Map[String, ActorRef[ContextActor.Command]] = Map.empty
   implicit val timeout: Timeout = 10.seconds
+  private val sharding = ClusterSharding(context.system)
+  sharding.init(Entity(typeKey = ContextActor.TypeKey) { entityContext =>
+    ContextActor(entityContext.entityId, PersistenceId(entityContext.entityTypeKey.name, entityContext.entityId))
+  })
 
   override def onMessage(msg: Command): Behavior[Command] = msg match {
     case Update(id, topicName, value, replyTo) =>
-      val actor = loadActor(id)
+      val actor = sharding.entityRefFor(ContextActor.TypeKey, id)
       context.ask[ContextActor.Command, ContextActor.UpdateResponse](actor, reply => ContextActor.Update(topicName, value, reply)) {
         case Failure(exception) => CommandResult(false)
         case Success(value) =>
@@ -53,7 +58,7 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
       Behaviors.same
 
     case QueryState(id, replyTo) =>
-      val actor = loadActor(id)
+      val actor = sharding.entityRefFor(ContextActor.TypeKey, id)
       context.ask[ContextActor.Command, ContextActor.CurrentState](actor, reply => ContextActor.QueryState(reply)) {
         case Failure(exception) => replyTo ! CurrentState(None)
           CommandResult(false)
@@ -63,11 +68,4 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
       Behaviors.same
   }
 
-  private def loadActor(id: String) = {
-    if (map.contains(id)) {
-      map(id)
-    } else {
-      context.spawn(ContextActor(id), id).tap(a => map = map + (id -> a))
-    }
-  }
 }

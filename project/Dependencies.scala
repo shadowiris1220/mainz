@@ -43,7 +43,8 @@ object Dependencies {
     "com.lightbend.akka.management" %% "akka-management-cluster-http" % AkkaManagementVersion exclude("com.typesafe.akka", "akka-http-spray-json") exclude("com.typesafe.akka", "akka-http-core"),
     "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % AkkaManagementVersion,
     "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % AkkaManagementVersion,
-    "com.typesafe.akka" %% "akka-cluster-typed" % AkkaVersion
+    "com.typesafe.akka" %% "akka-cluster-typed" % AkkaVersion,
+    "com.typesafe.akka" %% "akka-cluster-sharding-typed" % AkkaVersion
   )
 
   lazy val log = Seq(
