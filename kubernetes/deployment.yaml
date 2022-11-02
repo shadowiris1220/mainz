@@ -58,6 +58,7 @@ spec:
   ports:
     - port: 8000
       targetPort: 8000
+      name: elbing-port
     - port: 8558
       targetPort: 8558
       name: akka-port
