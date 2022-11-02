@@ -6,6 +6,7 @@ object Dependencies {
   lazy val AkkaVersion = "2.6.14"
   lazy val AkkaHttpVersion = "10.2.10"
   lazy val SlickVersion = "3.3.3"
+  lazy val AkkaManagementVersion = "1.1.4"
 
   lazy val akkaActor = Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % AkkaVersion,
@@ -18,7 +19,8 @@ object Dependencies {
   )
   lazy val akkaHttp = Seq(
     "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
-    "de.heikoseeberger" %% "akka-http-circe" % "1.39.2"
+    "de.heikoseeberger" %% "akka-http-circe" % "1.39.2",
+    "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.10"
   )
 
   lazy val akkaStream = Seq(
@@ -37,6 +39,12 @@ object Dependencies {
     "com.typesafe.slick" %% "slick-hikaricp" % SlickVersion
   )
 
+  lazy val akkaCluster = Seq(
+    "com.lightbend.akka.management" %% "akka-management-cluster-http" % AkkaManagementVersion exclude("com.typesafe.akka", "akka-http-spray-json") exclude("com.typesafe.akka", "akka-http-core"),
+    "com.lightbend.akka.management" %% "akka-management-cluster-bootstrap" % AkkaManagementVersion,
+    "com.lightbend.akka.discovery" %% "akka-discovery-kubernetes-api" % AkkaManagementVersion
+  )
+
   lazy val log = Seq(
     "ch.qos.logback" % "logback-core" % "1.4.4",
     "ch.qos.logback" % "logback-classic" % "1.4.4"
@@ -51,11 +59,11 @@ object Dependencies {
   )
 
   lazy val postgres = Seq(
-     "org.postgresql" % "postgresql" % "42.5.0"
+    "org.postgresql" % "postgresql" % "42.5.0"
   )
 
 
-  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization ++ akkaPersistenceJDBC
+  lazy val akka = akkaActor ++ akkaPersistence ++ akkaHttp ++ akkaStream ++ akkaSerialization ++ akkaPersistenceJDBC ++ akkaCluster
 
   lazy val dependency = akka ++ log ++ circe ++ leveldb ++ postgres
 }

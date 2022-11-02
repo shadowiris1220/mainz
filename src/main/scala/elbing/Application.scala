@@ -8,8 +8,8 @@ import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
 object Application extends App {
-  LoggerFactory.getLogger(classOf[Application.type])
+  val logger = LoggerFactory.getLogger(classOf[Application.type])
   val config = ConfigFactory.load().getConfig("app")
   val appName = config.getString("name")
-  implicit val actorSystem = ActorSystem(RootActor(), appName)
+  ActorSystem(RootActor(), appName)
 }
