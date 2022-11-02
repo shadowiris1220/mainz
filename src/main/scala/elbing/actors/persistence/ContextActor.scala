@@ -21,6 +21,8 @@ object ContextActor {
   implicit lazy val codecActor: Codec[ActorRef[UpdateResponse]] = new AkkaCodecs {}.actorRefCodec
   implicit lazy val currentActor: Codec[ActorRef[CurrentState]] = new AkkaCodecs {}.actorRefCodec
   implicit lazy val stateCodec: Codec[State] = deriveCodec
+  implicit lazy val currentStateCodec: Codec[CurrentState] = deriveCodec
+  implicit lazy val updateResponseCodec: Codec[UpdateResponse] = deriveCodec
 
   final case class UpdateResponse(version: Int)
 
