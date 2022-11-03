@@ -24,9 +24,9 @@ object ContextActor {
   implicit lazy val currentStateCodec: Codec[CurrentState] = deriveCodec
   implicit lazy val updateResponseCodec: Codec[UpdateResponse] = deriveCodec
 
-  final case class UpdateResponse(version: Int)
+  final case class UpdateResponse(version: Int) extends CirceAkkaSerializable
 
-  final case class CurrentState(state: Map[String, Json])
+  final case class CurrentState(state: Map[String, Json]) extends CirceAkkaSerializable
 
   final case class Update(topicName: String, value: Json, replyTo: ActorRef[UpdateResponse]) extends Command
 
