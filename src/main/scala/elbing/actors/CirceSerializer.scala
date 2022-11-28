@@ -13,7 +13,9 @@ class CirceSerializer(actorSystem: ExtendedActorSystem) extends CirceAkkaSeriali
 
   override lazy val codecs: Seq[Registration[_ <: CirceAkkaSerializable]] = Seq(
     Register[ContextActor.Event],
-    Register[ContextActor.Command]
+    Register[ContextActor.Command],
+    Register[ContextActor.CurrentState],
+    Register[ContextActor.UpdateResponse]
   )
   override lazy val manifestMigrations: Seq[(String, Class[_])] = Nil
   override lazy val packagePrefix: String = "com.inossem.elbing.actors"

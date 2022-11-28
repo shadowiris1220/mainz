@@ -5,6 +5,7 @@ metadata:
   labels:
     app: elbing
 spec:
+  replicas: 2
   selector:
     matchLabels:
       app: elbing-pod
@@ -23,6 +24,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
+            - name: management
+              containerPort: 8558
+              protocol: TCP
           env:
             - name: DB_HOST
               value: postgres-svc
@@ -33,3 +37,63 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: DB_PASSWORD
+            - name: AKKA_ACTOR_PROVIDER
+              value: cluster
+          livenessProbe:
+            httpGet:
+              port: 8000
+              path: /home
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              port: management
+              path: /ready
+            periodSeconds: 10
+            failureThreshold: 10
+            initialDelaySeconds: 20
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elbing-svc
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8000
+      targetPort: 8000
+      name: elbing-port
+  selector:
+    app: elbing-pod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: elbing-akka-svc
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8558
+      targetPort: 8558
+      name: akka-port
+  selector:
+    app: elbing-pod
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pgo-ingress-elbing
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+spec:
+  rules:
+    - host: beta-elbing.pgo.plus
+      http:
+        paths:
+          - path: /
+            backend:
+              service:
+                name: elbing-svc
+                port:
+                  number: 8000
+            pathType: Exact

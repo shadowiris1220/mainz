@@ -5,6 +5,7 @@ import elbing.actors.CirceAkkaSerializable
 
 import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.{ActorContext, Behaviors}
+import akka.cluster.sharding.typed.scaladsl.EntityTypeKey
 import akka.persistence.typed.PersistenceId
 import akka.persistence.typed.scaladsl.EventSourcedBehavior.{CommandHandler, EventHandler}
 import akka.persistence.typed.scaladsl.{Effect, EventSourcedBehavior}
@@ -20,10 +21,12 @@ object ContextActor {
   implicit lazy val codecActor: Codec[ActorRef[UpdateResponse]] = new AkkaCodecs {}.actorRefCodec
   implicit lazy val currentActor: Codec[ActorRef[CurrentState]] = new AkkaCodecs {}.actorRefCodec
   implicit lazy val stateCodec: Codec[State] = deriveCodec
+  implicit lazy val currentStateCodec: Codec[CurrentState] = deriveCodec
+  implicit lazy val updateResponseCodec: Codec[UpdateResponse] = deriveCodec
 
-  final case class UpdateResponse(version: Int)
+  final case class UpdateResponse(version: Int) extends CirceAkkaSerializable
 
-  final case class CurrentState(state: Map[String, Json])
+  final case class CurrentState(state: Map[String, Json]) extends CirceAkkaSerializable
 
   final case class Update(topicName: String, value: Json, replyTo: ActorRef[UpdateResponse]) extends Command
 
@@ -57,11 +60,15 @@ object ContextActor {
     }
   }
 
-  def apply(id: String) = Behaviors.setup[Command](ctx =>
+  val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("ContextActor")
+
+  def apply(entityId: String, persistenceId: PersistenceId) = Behaviors.setup[Command](ctx => {
+    ctx.log.info("Starting ContextActor:{}", entityId)
     EventSourcedBehavior(
-      persistenceId = PersistenceId.ofUniqueId(id),
+      persistenceId = persistenceId,
       emptyState = State(Map.empty, List.empty, 0),
       commandHandler = commandHandler(ctx),
       eventHandler = eventHandler(ctx)
-    ))
+    )
+  })
 }
