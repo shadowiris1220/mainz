@@ -58,6 +58,7 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
       Behaviors.same
 
     case QueryState(id, replyTo) =>
+      context.log.info("query state:{}", id)
       val actor = sharding.entityRefFor(ContextActor.TypeKey, id)
       context.ask[ContextActor.Command, ContextActor.CurrentState](actor, reply => ContextActor.QueryState(reply)) {
         case Failure(exception) => replyTo ! CurrentState(None)
