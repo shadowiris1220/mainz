@@ -47,7 +47,7 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
     case Update(id, topicName, value, replyTo) =>
       val actor = sharding.entityRefFor(ContextActor.TypeKey, id)
       context.ask[ContextActor.Command, ContextActor.UpdateResponse](actor, reply => ContextActor.Update(topicName, value, reply)) {
-        case Failure(exception) => CommandResult(false)
+        case Failure(_) => CommandResult(false)
         case Success(value) =>
           replyTo ! Updated(value.version)
           CommandResult(true)
@@ -58,6 +58,7 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
       Behaviors.same
 
     case QueryState(id, replyTo) =>
+      context.log.info("query state:{}", id)
       val actor = sharding.entityRefFor(ContextActor.TypeKey, id)
       context.ask[ContextActor.Command, ContextActor.CurrentState](actor, reply => ContextActor.QueryState(reply)) {
         case Failure(exception) => replyTo ! CurrentState(None)

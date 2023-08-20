@@ -63,7 +63,7 @@ object ContextActor {
   val TypeKey: EntityTypeKey[Command] = EntityTypeKey[Command]("ContextActor")
 
   def apply(entityId: String, persistenceId: PersistenceId) = Behaviors.setup[Command](ctx => {
-    ctx.log.info("Starting ContextActor:{}", entityId)
+    ctx.log.info("Starting ContextActor:{} && persistence: {}", entityId, persistenceId)
     EventSourcedBehavior(
       persistenceId = persistenceId,
       emptyState = State(Map.empty, List.empty, 0),
