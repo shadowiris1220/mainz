@@ -20,11 +20,15 @@ object ContextManageActor {
 
   final case class Update(id: String, topicName: String, value: Json, replyTo: ActorRef[Updated]) extends Command
 
+  final case class Reset(id: String, topicName: String, replyTo: ActorRef[Updated]) extends Command
+
   final case class CommandResult(success: Boolean) extends Command
 
   final case class QueryState(id: String, replyTo: ActorRef[CurrentState]) extends Command
 
   final case class Updated(currentVersion: Int)
+
+  final case class Reseted()
 
   final case class CurrentState(state: Option[Map[String, Json]])
 
@@ -55,6 +59,10 @@ class ContextManageActor(context: ActorContext[Command]) extends AbstractBehavio
       Behaviors.same
     case CommandResult(success) =>
       context.log.info("command result success ? {}", success)
+      Behaviors.same
+
+    case Reset(id, topicName, replyTo) =>
+      context.log.info("reset topic:{}", topicName)
       Behaviors.same
 
     case QueryState(id, replyTo) =>
