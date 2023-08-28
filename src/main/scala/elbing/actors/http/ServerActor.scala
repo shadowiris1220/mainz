@@ -63,7 +63,9 @@ class ServerActor(context: ActorContext[Command], manager: ActorRef[ContextManag
   private val binding = Http().newServerAt("0.0.0.0", port).bind(router)
   context.pipeToSelf(binding) {
     case Failure(exception) => ServerFailed(exception)
-    case Success(value) => ServerStarted(value.localAddress.getPort)
+    case Success(value) => 
+	logger.info("server started success")
+	ServerStarted(value.localAddress.getPort)
   }
 
   override def onMessage(msg: Command): Behavior[Command] = msg match {
