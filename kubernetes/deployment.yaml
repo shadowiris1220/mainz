@@ -16,8 +16,6 @@ spec:
     spec:
       imagePullSecrets:
         - name: azure-cr
-      nodeSelector:
-        kubernetes.azure.com/mode: user
       containers:
         - name: k8s-elbing
           image: inossem.azurecr.io/elbing-dc
